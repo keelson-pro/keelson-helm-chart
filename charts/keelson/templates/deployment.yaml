@@ -1,0 +1,190 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 Keelson contributors (Fred Cooke)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "keelson.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "keelson.labels" . | nindent 4 }}
+    kaptain.org/project-name: keelson
+    kaptain.org/version: "1.23"
+    kaptain.org/owner: keelson-pro
+  annotations:
+    kaptain.org/source-repository: keelson-pro/keelson
+spec:
+  # Single replica + Recreate strategy: Keelson is the sole writer to keelson-state,
+  # and the directory-based work queue lives on the pod filesystem.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "keelson.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "keelson.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- include "keelson.assertUnreserved" (dict "ctx" $ "user" . "kind" "labels" "field" "podLabels") }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        kaptain.org/project-name: keelson
+        kaptain.org/version: "1.23"
+        kaptain.org/owner: keelson-pro
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        kaptain.org/source-repository: keelson-pro/keelson
+        {{- with .Values.podAnnotations }}
+        {{- include "keelson.assertUnreserved" (dict "ctx" $ "user" . "kind" "annotations" "field" "podAnnotations") }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "keelson.fullname" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: keelson
+          image: {{ include "keelson.image" . }}
+          imagePullPolicy: IfNotPresent
+          command: ["keelson"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: KEELSON_LOG_FORMAT
+              value: "{{ .Values.keelson.logFormat }}"
+            - name: KEELSON_LOG_LEVEL
+              value: "{{ .Values.keelson.logLevel }}"
+            - name: KEELSON_LOG_MANAGED_WORKLOADS
+              value: "{{ .Values.keelson.logManagedWorkloads }}"
+            - name: KEELSON_SCOPE
+              value: {{ if .Values.keelson.namespaces }}"namespace"{{ else }}"cluster"{{ end }}
+            - name: KEELSON_NAMESPACES
+              value: {{ join " " .Values.keelson.namespaces | quote }}
+            - name: KEELSON_CONFIG_MODE
+              value: "{{ .Values.keelson.configMode }}"
+            - name: KEELSON_RESPECT_SA_PULL_SECRETS
+              value: "{{ .Values.keelson.respectServiceAccountPullSecrets }}"
+            - name: KEELSON_WATCHED_KINDS
+              value: {{ join " " .Values.keelson.watchedKinds | quote }}
+            - name: KEELSON_RECONCILE_INTERVAL
+              value: "{{ .Values.keelson.reconcileInterval }}"
+            - name: KEELSON_REGISTRY_POLL_INTERVAL_DEFAULT
+              value: "{{ .Values.keelson.registryPollIntervalDefault }}"
+            - name: KEELSON_FIRST_POLL_DELAY_MAX
+              value: "{{ .Values.keelson.firstPollDelayMax }}"
+            - name: KEELSON_REGISTRY_POLL_CONCURRENCY
+              value: "{{ .Values.keelson.registryPollConcurrency }}"
+            - name: KEELSON_POLL_OVERRUN_WARNING_BACKOFF_LIMIT
+              value: "{{ .Values.keelson.pollOverrunWarningBackoffLimit }}"
+            - name: KEELSON_RECONCILE_OVERRUN_WARNING_BACKOFF_LIMIT
+              value: "{{ .Values.keelson.reconcileOverrunWarningBackoffLimit }}"
+            - name: KEELSON_ROLLOUT_WORKLOAD_REF_WARNING_BACKOFF_LIMIT
+              value: "{{ .Values.keelson.rolloutWorkloadRefWarningBackoffLimit }}"
+            - name: KEELSON_FULL_REFRESH_INTERVAL
+              value: "{{ .Values.keelson.fullRefreshInterval }}"
+            - name: KEELSON_TICK_INTERVAL
+              value: "{{ .Values.keelson.tickInterval }}"
+            - name: KEELSON_HEARTBEAT_MAX_AGE
+              value: "{{ .Values.keelson.heartbeatMaxAge }}"
+            - name: KEELSON_WATCHER_RESPAWN_BACKOFF_MAX
+              value: "{{ .Values.keelson.watcherRespawnBackoffMax }}"
+            - name: KEELSON_WATCHER_RESPAWN_HEALTHY_RESET
+              value: "{{ .Values.keelson.watcherRespawnHealthyReset }}"
+            - name: KEELSON_WATCHER_RECONNECT_INITIAL
+              value: "{{ .Values.keelson.watcherReconnectInitial }}"
+            - name: KEELSON_WATCHER_RECONNECT_MAX
+              value: "{{ .Values.keelson.watcherReconnectMax }}"
+            - name: KEELSON_WATCHER_RECONNECT_RESET
+              value: "{{ .Values.keelson.watcherReconnectReset }}"
+            - name: KEELSON_STATE_CONFIGMAP
+              value: "{{ .Values.keelson.stateConfigMap }}"
+            - name: KEELSON_FIELD_MANAGER_STRATEGY_OWNED
+              value: "{{ .Values.keelson.fieldManagerStrategyOwned }}"
+            - name: KEELSON_FIELD_MANAGER_STRATEGY_UNOWNED
+              value: "{{ .Values.keelson.fieldManagerStrategyUnowned }}"
+            - name: KEELSON_LOG_DEBUG_REPEAT_INTERVAL
+              value: "{{ .Values.keelson.logDebugRepeatInterval }}"
+            - name: KEELSON_LOG_INFO_REPEAT_INTERVAL
+              value: "{{ .Values.keelson.logInfoRepeatInterval }}"
+            - name: KEELSON_LOG_WARN_REPEAT_INTERVAL
+              value: "{{ .Values.keelson.logWarnRepeatInterval }}"
+            - name: KEELSON_LOG_ERROR_REPEAT_INTERVAL
+              value: "{{ .Values.keelson.logErrorRepeatInterval }}"
+            - name: KEELSON_LOG_FILE_MAX_BYTES
+              value: "{{ .Values.keelson.logFileMaxBytes }}"
+            - name: KEELSON_LOG_FILE_KEEP
+              value: "{{ .Values.keelson.logFileKeep }}"
+          resources:
+            requests:
+              memory: "{{ .Values.keelson.memory }}"
+              cpu: "{{ .Values.keelson.cpuRequest }}"
+              ephemeral-storage: "{{ .Values.keelson.ephemeralStorage }}"
+            limits:
+              memory: "{{ .Values.keelson.memory }}"
+              ephemeral-storage: "{{ .Values.keelson.ephemeralStorage }}"
+{{- if .Values.forceCpuLimit }}
+              cpu: "{{ .Values.forceCpuLimit }}"
+{{- end }}
+          startupProbe:
+            exec:
+              command: ["keelson-probe", "startup"]
+            periodSeconds: {{ .Values.keelson.startupProbePeriodSeconds }}
+            failureThreshold: {{ .Values.keelson.startupProbeFailureThreshold }}
+            timeoutSeconds: {{ .Values.keelson.startupProbeTimeoutSeconds }}
+          readinessProbe:
+            exec:
+              command: ["keelson-probe", "readiness"]
+            periodSeconds: {{ .Values.keelson.readinessProbePeriodSeconds }}
+            failureThreshold: {{ .Values.keelson.readinessProbeFailureThreshold }}
+            timeoutSeconds: {{ .Values.keelson.readinessProbeTimeoutSeconds }}
+          livenessProbe:
+            exec:
+              command: ["keelson-probe", "liveness"]
+            periodSeconds: {{ .Values.keelson.livenessProbePeriodSeconds }}
+            failureThreshold: {{ .Values.keelson.livenessProbeFailureThreshold }}
+            timeoutSeconds: {{ .Values.keelson.livenessProbeTimeoutSeconds }}
+          volumeMounts:
+            - name: config
+              mountPath: /configmap
+              readOnly: true
+            - name: work
+              mountPath: /keelson/work
+            - name: home
+              mountPath: /home/keelson
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "keelson.fullname" . }}
+            optional: true
+        - name: work
+          emptyDir: {}
+        - name: home
+          emptyDir: {}

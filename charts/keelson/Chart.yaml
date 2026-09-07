@@ -1,0 +1,16 @@
+apiVersion: v2
+name: keelson
+version: 1.23.1
+appVersion: "1.23"
+description: Keelson - a near drop-in Helm-installable replacement for Keel with better docs, logging, and an opinionated implementation.
+type: application
+# No kubeVersion: parts 3 and 4 of image.tag are the target kube major.minor version. Supports +/- 1 minor, too.
+home: https://github.com/keelson-pro/keelson
+icon: https://avatars.githubusercontent.com/u/213761241?s=400
+sources:
+  - https://github.com/keelson-pro/keelson
+  - https://github.com/keelson-pro/keelson-package
+  - https://github.com/keelson-pro/keelson-helm-chart
+maintainers:
+  - name: Fred Cooke
+    email: support@keelson.pro

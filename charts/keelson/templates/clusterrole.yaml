@@ -1,0 +1,21 @@
+{{- if .Values.keelson.namespaces }}
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 Keelson contributors (Fred Cooke)
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Namespace }}.{{ include "keelson.fullname" . }}
+  labels:
+    {{- include "keelson.labels" . | nindent 4 }}
+    kaptain.org/project-name: keelson
+    kaptain.org/version: "1.23"
+    kaptain.org/owner: keelson-pro
+  annotations:
+    kaptain.org/source-repository: keelson-pro/keelson
+rules:
+  # Reading at boot that every namespace in KEELSON_NAMESPACES exists.
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get"]
+{{- end }}

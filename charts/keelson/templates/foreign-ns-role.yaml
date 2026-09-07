@@ -1,0 +1,78 @@
+{{- range $foreignNamespace := uniq .Values.keelson.namespaces }}
+{{- if ne $foreignNamespace $.Release.Namespace }}
+---
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 Keelson contributors (Fred Cooke)
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "keelson.fullname" $ }}-foreign-ns-rbac
+  namespace: {{ $foreignNamespace }}
+  labels:
+    {{- include "keelson.labels" $ | nindent 4 }}
+    kaptain.org/project-name: keelson-foreign-ns-rbac
+    kaptain.org/version: "1.2"
+    kaptain.org/owner: keelson-pro
+  annotations:
+    kaptain.org/source-repository: keelson-pro/keelson-foreign-ns-rbac
+rules:
+{{- if $.Values.rbac.allowSecretRead }}
+  # Index 0
+  # For kubernetes.io/dockerconfigjson Secrets: workload/SA imagePullSecrets and registry-wide ones
+  # Remove if using aws-irsa, azure-wi, gcp-wi, or their synonyms exclusively
+  # Narrow by specifying resourceNames if you know the list up front
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+{{- end }}
+{{- if eq $.Values.keelson.respectServiceAccountPullSecrets "true" }}
+  # Index 1
+  # Workload ServiceAccounts for when KEELSON_RESPECT_SA_PULL_SECRETS is true
+  # Remove if KEELSON_RESPECT_SA_PULL_SECRETS is false
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["get"]
+{{- end }}
+{{- if has "Deployment" $.Values.keelson.watchedKinds }}
+  # Index 2
+  # For updating images on Deployments
+  # Remove if you don't need Deployments watched
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+{{- end }}
+{{- if has "StatefulSet" $.Values.keelson.watchedKinds }}
+  # Index 3
+  # For updating images on StatefulSets
+  # Remove if you don't need StatefulSets watched
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+{{- end }}
+{{- if has "DaemonSet" $.Values.keelson.watchedKinds }}
+  # Index 4
+  # For updating images on DaemonSets
+  # Remove if you don't need DaemonSets watched
+  - apiGroups: ["apps"]
+    resources: ["daemonsets"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+{{- end }}
+{{- if has "CronJob" $.Values.keelson.watchedKinds }}
+  # Index 5
+  # For updating images on CronJobs (special suspended AND normal ones)
+  # Remove if you don't need Cronjobs of either type watched
+  - apiGroups: ["batch"]
+    resources: ["cronjobs"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+{{- end }}
+{{- if and $.Values.rbac.allowJobCreate (has "CronJob" $.Values.keelson.watchedKinds) }}
+  # Index 6
+  # For creating one-off Jobs from CronJobs
+  # Remove if you have no special suspended CronJobs
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create"]
+{{- end }}
+{{- end }}
+{{- end }}
