@@ -1,0 +1,39 @@
+{{ include "keelson.fullname" . }} is installed in {{ .Release.Namespace }}.
+
+Watching: {{ if .Values.keelson.namespaces }}{{ join ", " .Values.keelson.namespaces }}{{ else }}every namespace in the cluster{{ end }}
+Image:    {{ include "keelson.image" . }}
+
+Check it came up, and read back every setting it took:
+
+  kubectl -n {{ .Release.Namespace }} rollout status deploy/{{ include "keelson.fullname" . }}
+  kubectl -n {{ .Release.Namespace }} logs deploy/{{ include "keelson.fullname" . }}
+
+The first thing it logs is "Keelson configuration from environment:", one line
+per setting.
+{{- if eq .Values.keelson.logManagedWorkloads "true" }}
+
+After the first scan it lists every workload it has been asked to manage, which
+is the quickest way to tell it is looking where you think it is.
+{{- end }}
+
+Registries, which Keelson reads image tags from:
+{{- if .Values.registry }}
+
+  Central config names {{ .Values.registry }}, auth-mode {{ .Values.keelson.authMode }}.
+  Workloads whose own imagePullSecrets cover their registry never reach it.
+{{- else }}
+
+  No central config, so every workload must carry imagePullSecrets that cover
+  the registry it pulls from, or Keelson reads its tags anonymously.
+{{- end }}
+{{- if .Values.keelson.namespaces }}
+
+The namespaces listed above must already exist; Helm does not create them. Each
+of them other than this one got a Role and RoleBinding. Where you cannot write
+into a namespace, its owner can install keelson-foreign-ns-rbac instead.
+{{- end }}
+{{- if has "Rollout" .Values.keelson.watchedKinds }}
+
+Rollout is watched, so RBAC for rollouts.argoproj.io is installed with it. The
+Argo CRD has to be present or every scan of that kind fails.
+{{- end }}

@@ -1,0 +1,27 @@
+apiVersion: kaptain.org/1.29
+kind: basic-quality-and-versioning
+metadata:
+  description: "Keelson Helm chart - keelson manifests pulled in, translated into Helm templates, published as a Helm OCI artefact, a classic repo on GitHub Pages, and a GitHub Release asset."
+
+spec:
+  layers:
+    - ghcr.io/kube-kaptain/layer/layer-github-flow-strict:[1.4]
+  platform:
+    githubActions:
+      release:
+        verbatimFiles: kaptain-out/chart-release/keelson.tgz
+        notesFile: kaptain-out/helm-build/release-notes.md
+  main:
+    hooks:
+      preTaggingTests: .github/bin/lint-scripts.bash
+      postVersionsAndNaming: .github/bin/build-and-publish-chart.bash
+  global:
+    release:
+      versioning:
+        strategy: file-pattern-match
+        patternType: custom
+        source:
+          subPath: 'src/upstream'
+          fileName: KeelsonVersion
+          pattern: '^([0-9]+\.[0-9]+)$'
+          prefixParts: '2'

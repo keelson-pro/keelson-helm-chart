@@ -1,0 +1,25 @@
+{{- if has .Release.Namespace .Values.keelson.namespaces }}
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 Keelson contributors (Fred Cooke)
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "keelson.fullname" . }}-own-ns
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "keelson.labels" . | nindent 4 }}
+    kaptain.org/project-name: keelson
+    kaptain.org/version: "1.23"
+    kaptain.org/owner: keelson-pro
+  annotations:
+    kaptain.org/source-repository: keelson-pro/keelson
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "keelson.fullname" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "keelson.fullname" . }}-own-ns
+{{- end }}

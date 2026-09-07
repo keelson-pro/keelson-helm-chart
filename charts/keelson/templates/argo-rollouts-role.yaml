@@ -1,0 +1,24 @@
+{{- if has "Rollout" .Values.keelson.watchedKinds }}
+{{- range $watchedNamespace := uniq .Values.keelson.namespaces }}
+---
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 Keelson contributors (Fred Cooke)
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "keelson.fullname" $ }}-argo-rollouts-rbac
+  namespace: {{ $watchedNamespace }}
+  labels:
+    {{- include "keelson.labels" $ | nindent 4 }}
+    kaptain.org/project-name: keelson-argo-rollouts-rbac
+    kaptain.org/version: "1.3"
+    kaptain.org/owner: keelson-pro
+  annotations:
+    kaptain.org/source-repository: keelson-pro/keelson-argo-rollouts-rbac
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["rollouts"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+{{- end }}
+{{- end }}
