@@ -7,6 +7,8 @@ sources:
   - https://github.com/keelson-pro/keelson
   - https://github.com/keelson-pro/keelson-package
   - https://github.com/keelson-pro/keelson-helm-chart
+  - https://github.com/keelson-pro/keelson-foreign-ns-rbac
+  - https://github.com/keelson-pro/keelson-argo-rollouts-rbac
 maintainers:
   - name: Fred Cooke
     email: support@keelson.pro
