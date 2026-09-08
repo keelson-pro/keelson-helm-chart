@@ -17,6 +17,8 @@ entries:
     - https://github.com/keelson-pro/keelson
     - https://github.com/keelson-pro/keelson-package
     - https://github.com/keelson-pro/keelson-helm-chart
+    - https://github.com/keelson-pro/keelson-foreign-ns-rbac
+    - https://github.com/keelson-pro/keelson-argo-rollouts-rbac
     type: application
     urls:
     - https://github.com/keelson-pro/keelson-helm-chart/releases/download/1.23.1/keelson-1.23.1.tgz
