@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keelson Helm chart</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    max-width: 46rem; margin: 3rem auto; padding: 0 1.25rem;
+    font: 16px/1.6 system-ui, sans-serif;
+  }
+  h1 { font-size: 1.6rem; margin: 0 0 1.5rem; }
+  h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; }
+  pre {
+    padding: 0.9rem 1rem; overflow-x: auto; border-radius: 6px;
+    background: rgba(127, 127, 127, 0.14);
+  }
+  code { font-size: 0.9em; }
+  :not(pre) > code {
+    padding: 0.1em 0.35em; border-radius: 4px;
+    background: rgba(127, 127, 127, 0.18);
+  }
+  footer { margin-top: 3rem; font-size: 0.85rem; opacity: 0.7; }
+</style>
+</head>
+<body>
+<main id="content">Loading <a href="README.md">README.md</a>.</main>
+<footer>Rendered in the browser from README.md. <a href="index.yaml">index.yaml</a> is the repo index Helm reads.</footer>
+<script>
+// Enough Markdown for this one file: headings, indented code, paragraphs,
+// inline code and links. Anything else renders as its own literal text, which
+// is the failure worth having on a page nobody can debug from.
+const escape = (text) => text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+
+const inline = (text) => escape(text)
+  .replace(/`([^`]+)`/g, '<code>$1</code>')
+  .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+function render(markdown) {
+  const out = [];
+  let paragraph = [];
+  let code = [];
+
+  const flushParagraph = () => {
+    if (paragraph.length) out.push('<p>' + inline(paragraph.join(' ')) + '</p>');
+    paragraph = [];
+  };
+  const flushCode = () => {
+    if (code.length) out.push('<pre><code>' + escape(code.join('\n')) + '</code></pre>');
+    code = [];
+  };
+
+  for (const line of markdown.split('\n')) {
+    if (/^ {4}/.test(line)) { flushParagraph(); code.push(line.slice(4)); continue; }
+    flushCode();
+    const heading = line.match(/^(#{1,3})\s+(.*)$/);
+    if (heading) { flushParagraph(); out.push(`<h${heading[1].length}>${inline(heading[2])}</h${heading[1].length}>`); continue; }
+    if (line.trim() === '') { flushParagraph(); continue; }
+    paragraph.push(line.trim());
+  }
+  flushParagraph();
+  flushCode();
+  return out.join('\n');
+}
+
+fetch('README.md')
+  .then((response) => response.ok ? response.text() : Promise.reject(response.status))
+  .then((markdown) => { document.getElementById('content').innerHTML = render(markdown); })
+  .catch((status) => {
+    document.getElementById('content').innerHTML =
+      '<p>Could not load <a href="README.md">README.md</a> (' + escape(String(status)) + ').</p>';
+  });
+</script>
+</body>
+</html>

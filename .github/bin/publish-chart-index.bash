@@ -102,9 +102,14 @@ else
     printf 'gh-pages branch does not exist on the remote - bootstrapping as orphan.\n'
     git checkout --quiet --orphan gh-pages
     git rm --quiet -rf .
-    touch .nojekyll
+    printf '# Turns off Jekyll so Pages serves this branch as committed.\n' > .nojekyll
     sed "s|@PAGES_URL@|${PAGES_URL}|g" "${REPO_ROOT}/src/pages-README.md" > README.md
 fi
+
+# Rewritten every run, not just at bootstrap, so a fix to it reaches a branch
+# that already exists. Pages serves the branch raw, so without this the site is
+# a 404 and the README a download.
+cp "${REPO_ROOT}/src/pages-index.html" index.html
 
 # Staged under its release-asset filename so helm repo index can checksum it.
 # Not committed: the release holds it, index.yaml points at its URL.
@@ -126,7 +131,7 @@ cp "${TGZ_STAGE}/index.yaml" index.yaml
 git config user.email 'keelson-bot@users.noreply.github.com'
 git config user.name 'keelson-bot'
 
-git add .nojekyll README.md index.yaml
+git add .nojekyll README.md index.html index.yaml
 if git diff --cached --quiet; then
     printf 'No changes to gh-pages - nothing to publish.\n'
     exit 0
