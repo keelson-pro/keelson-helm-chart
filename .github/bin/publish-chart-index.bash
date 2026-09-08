@@ -102,7 +102,7 @@ else
     printf 'gh-pages branch does not exist on the remote - bootstrapping as orphan.\n'
     git checkout --quiet --orphan gh-pages
     git rm --quiet -rf .
-    touch .nojekyll
+    printf '# Turns off Jekyll so Pages serves this branch as committed.\n' > .nojekyll
     sed "s|@PAGES_URL@|${PAGES_URL}|g" "${REPO_ROOT}/src/pages-README.md" > README.md
 fi
 
