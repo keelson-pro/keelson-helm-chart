@@ -1,4 +1,4 @@
-apiVersion: kaptain.org/1.29
+apiVersion: kaptain.org/1.30
 kind: basic-quality-and-versioning
 metadata:
   description: "Keelson Helm chart - keelson manifests pulled in, translated into Helm templates, published as a Helm OCI artefact, a classic repo on GitHub Pages, and a GitHub Release asset."
