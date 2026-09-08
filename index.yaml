@@ -1,0 +1,24 @@
+apiVersion: v1
+entries:
+  keelson:
+  - apiVersion: v2
+    appVersion: "1.23"
+    created: "2026-09-08T08:08:42.504786788Z"
+    description: Keelson - a near drop-in Helm-installable replacement for Keel with
+      better docs, logging, and an opinionated implementation.
+    digest: 2d1dd6a482edbcba4026f6fd4ee16abd689d80e60a6b9a8d56bf8c57016e682d
+    home: https://github.com/keelson-pro/keelson
+    icon: https://avatars.githubusercontent.com/u/213761241?s=400
+    maintainers:
+    - email: support@keelson.pro
+      name: Fred Cooke
+    name: keelson
+    sources:
+    - https://github.com/keelson-pro/keelson
+    - https://github.com/keelson-pro/keelson-package
+    - https://github.com/keelson-pro/keelson-helm-chart
+    type: application
+    urls:
+    - https://github.com/keelson-pro/keelson-helm-chart/releases/download/1.23.1/keelson-1.23.1.tgz
+    version: 1.23.1
+generated: "2026-09-08T08:08:42.503883155Z"
