@@ -39,18 +39,19 @@ fullnameOverride: ""
 # image.* above, which is only where Keelson's own image comes from.
 #
 # Required while the default registries block below is in place, because that
-# block names this host. Keelson checks each workload's own imagePullSecrets
-# first, then its ServiceAccount's if keelson.respectServiceAccountPullSecrets
-# is "true", and only then falls back to the central config. Where those already
-# cover every registry, empty the registries block instead.
+# block names this host. Keelson tries the central config first and falls back to
+# the workload's own imagePullSecrets, so a host configured here costs no Secret
+# read per workload. Where every workload already carries its own credentials,
+# empty the registries block instead.
 registry: ""
 
 # The registries block written into registries.yaml in the ConfigMap.
 #
-# Keelson consults this only when a workload's own imagePullSecrets do not cover
-# the registry, and its ServiceAccount's when keelson.respectServiceAccountPullSecrets
-# is "true", which it is not by default. Set it to an empty string if they
-# always do, and Keelson runs with no central config.
+# Consulted before a workload's own imagePullSecrets, which are the fallback,
+# along with its ServiceAccount's when keelson.respectServiceAccountPullSecrets is
+# "true". Each source is tried against the registry in turn, so a credential that
+# resolves but fails does not mask one that works. Set this to an empty string to
+# run with no central config at all.
 #
 # Rendered as a Helm template, so the default below carries the {{ .Values.registry }}
 # token and behaves like the Kaptain install: one registry, one auth mode. Replace
@@ -59,9 +60,12 @@ registry: ""
 # auth-mode is one of:
 #   secret    a dockerconfigjson Secret, named after the host, in Keelson's own
 #             namespace unless the entry adds a "namespace" field
-#   aws-irsa  IAM Roles for Service Accounts (needs docker-credential-ecr-login)
-#   azure-wi  Azure Workload Identity
-#   gcp-wi    GCP Workload Identity
+#   aws       whatever the AWS credential chain provides, Pod Identity or IRSA
+#             (needs docker-credential-ecr-login)
+#   azure     Azure Workload Identity
+#   gcp       GCP Workload Identity
+#
+# The older aws-irsa, azure-wi and gcp-wi spellings are accepted as aliases.
 #
 # Expanded example, no token, so no --set registry needed:
 #
@@ -72,11 +76,11 @@ registry: ""
 #       auth-mode: secret
 #       namespace: platform-secrets
 #     123456789012.dkr.ecr.eu-west-1.amazonaws.com:
-#       auth-mode: aws-irsa
+#       auth-mode: aws
 #     myregistry.azurecr.io:
-#       auth-mode: azure-wi
+#       auth-mode: azure
 #     europe-west1-docker.pkg.dev:
-#       auth-mode: gcp-wi
+#       auth-mode: gcp
 registries: |
   {{ required "\n\nregistry is required while the default registries block is in place.\n\nSet the host your workloads pull from:\n  --set registry=registry.example.com\n\nOr replace this block with your own hosts. If your workloads already carry\nimagePullSecrets that cover every registry, Keelson needs no central config at\nall: set registries to an empty string to say so.\n  --set registries=\n" .Values.registry }}:
     auth-mode: {{ .Values.keelson.authMode }}
@@ -94,7 +98,7 @@ registries: |
 #       azure.workload.identity/use: "true"                                  # Azure WI
 #
 # Not required when ambient node credentials already cover the registry, which is
-# the common case for aws-irsa on a node role with ECR read.
+# the common case for aws on a node role with ECR read.
 serviceAccount:
   annotations: {}
   labels: {}
@@ -136,7 +140,7 @@ forceCpuLimit: ""
 #
 # allowSecretRead covers the dockerconfigjson Secrets named by workloads, by
 # their ServiceAccounts, and by the registries block. Set it false only if every
-# registry you use authenticates by cloud identity (aws-irsa, azure-wi, gcp-wi)
+# registry you use authenticates by cloud identity (aws, azure, gcp)
 # and no workload carries imagePullSecrets. Left true with no namespaces listed,
 # this is the widest grant in the chart: read any Secret in any namespace.
 #
@@ -147,8 +151,16 @@ rbac:
   allowSecretRead: true
   allowJobCreate: true
 
+# Two of the entries below are not Keelson's own settings: awsEcrCacheDir and
+# awsEcrDisableCache are passed straight to docker-credential-ecr-login as
+# AWS_ECR_CACHE_DIR and AWS_ECR_DISABLE_CACHE. Empty leaves the helper's
+# defaults, which cache an ECR token for its 12 hour life in /home/keelson/.ecr
+# on the emptyDir mounted there. Setting either is for an unusual cluster.
+#
 keelson:
   authMode: 'secret'
+  awsEcrCacheDir: ''
+  awsEcrDisableCache: ''
   configMode: 'keelson'
   cpuRequest: '100m'
   ephemeralStorage: '150Mi'
