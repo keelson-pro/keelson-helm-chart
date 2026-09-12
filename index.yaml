@@ -2,6 +2,28 @@ apiVersion: v1
 entries:
   keelson:
   - apiVersion: v2
+    appVersion: "1.25"
+    created: "2026-09-12T23:21:42.922018945Z"
+    description: Keelson - a near drop-in Helm-installable replacement for Keel with
+      better docs, logging, and an opinionated implementation.
+    digest: 03ecabea6e4c72035e3731133ab72c8160d4f94dd70d90c86bc5190f752fff47
+    home: https://github.com/keelson-pro/keelson
+    icon: https://avatars.githubusercontent.com/u/213761241?s=400
+    maintainers:
+    - email: support@keelson.pro
+      name: Fred Cooke
+    name: keelson
+    sources:
+    - https://github.com/keelson-pro/keelson
+    - https://github.com/keelson-pro/keelson-package
+    - https://github.com/keelson-pro/keelson-helm-chart
+    - https://github.com/keelson-pro/keelson-foreign-ns-rbac
+    - https://github.com/keelson-pro/keelson-argo-rollouts-rbac
+    type: application
+    urls:
+    - https://github.com/keelson-pro/keelson-helm-chart/releases/download/1.25.1/keelson-1.25.1.tgz
+    version: 1.25.1
+  - apiVersion: v2
     appVersion: "1.24"
     created: "2026-09-12T22:53:43.818967792Z"
     description: Keelson - a near drop-in Helm-installable replacement for Keel with
@@ -67,4 +89,4 @@ entries:
     urls:
     - https://github.com/keelson-pro/keelson-helm-chart/releases/download/1.23.1/keelson-1.23.1.tgz
     version: 1.23.1
-generated: "2026-09-12T22:53:43.818034016Z"
+generated: "2026-09-12T23:21:42.921122958Z"
