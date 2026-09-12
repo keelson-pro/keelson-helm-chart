@@ -28,7 +28,7 @@ version. Package versions are self-explanatory once you know the pattern:
 # Format
 1.X.1.Y.Z
 # Example
-1.24.1.36.1
+1.25.1.36.1
 ```
 
 Where:
@@ -48,12 +48,12 @@ kubectl version -o yaml | grep -A2 serverVersion
 ```
 
 **Take the highest Y your cluster allows, one above its current minor, and the
-highest Z.** For a chart whose `appVersion` is `1.24`:
+highest Z.** For a chart whose `appVersion` is `1.25`:
 
 | Cluster | Suitable package versions                   | Recommended   |
 |---------|---------------------------------------------|---------------|
-| `1.35`  | `1.24.1.34.Z`, `1.24.1.35.Z`, `1.24.1.36.Z` | `1.24.1.36.Z` |
-| `1.36`  | `1.24.1.35.Z`, `1.24.1.36.Z`, `1.24.1.37.Z` | `1.24.1.37.Z` |
+| `1.35`  | `1.25.1.34.Z`, `1.25.1.35.Z`, `1.25.1.36.Z` | `1.25.1.36.Z` |
+| `1.36`  | `1.25.1.35.Z`, `1.25.1.36.Z`, `1.25.1.37.Z` | `1.25.1.37.Z` |
 
 Every version in the middle column suits the cluster today, but they age
 differently. Pinning one above your cluster leaves two cluster upgrades before
