@@ -9,7 +9,7 @@ metadata:
   labels:
     {{- include "keelson.labels" . | nindent 4 }}
     kaptain.org/project-name: keelson
-    kaptain.org/version: "1.24"
+    kaptain.org/version: "1.25"
     kaptain.org/owner: keelson-pro
   annotations:
     kaptain.org/source-repository: keelson-pro/keelson
