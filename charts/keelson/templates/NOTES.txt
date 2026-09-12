@@ -19,12 +19,12 @@ is the quickest way to tell it is looking where you think it is.
 Registries, which Keelson reads image tags from:
 {{- if .Values.registry }}
 
-  Central config names {{ .Values.registry }}, auth-mode {{ .Values.keelson.authMode }}.
-  Workloads whose own imagePullSecrets cover their registry never reach it.
+  Central config names {{ .Values.registry }}, auth-mode {{ .Values.keelson.authMode }},
+  and is tried before a workload's own imagePullSecrets.
 {{- else }}
 
-  No central config, so every workload must carry imagePullSecrets that cover
-  the registry it pulls from, or Keelson reads its tags anonymously.
+  No central config, so each workload must carry imagePullSecrets covering the
+  registry it pulls from, or Keelson reads its tags anonymously.
 {{- end }}
 {{- if .Values.keelson.namespaces }}
 

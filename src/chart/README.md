@@ -110,18 +110,20 @@ For production, copy the image into your own registry and point at it:
 
 ## Registries
 
-Keelson authenticates to a registry to read tags. It finds credentials in this
-order, per workload:
+Keelson authenticates to a registry to read tags. It tries the central config in
+this chart, `registries.yaml`, first, then falls back to the workload's own
+`imagePullSecrets`, and its ServiceAccount's after those when
+`keelson.respectServiceAccountPullSecrets` is `true`.
 
-1. The workload's own `imagePullSecrets`.
-2. Its ServiceAccount's `imagePullSecrets`, when `keelson.respectServiceAccountPullSecrets` is `true`.
-3. The central config in this chart, `registries.yaml`.
+Central first because a host you have configured then costs no Secret read per
+workload, and because it is the credential you can reason about. A credential
+that resolves is not one that works, so each source is tried against the
+registry in turn: a stale pull secret no longer masks a working central one.
 
-So where your workloads already carry pull secrets, steps 1 and 2 cover
-everything and you can leave `registry` and `registries` empty. Configure the
-central config for registries they do not cover, or to keep credentials in one
-place. The `keelson.pro/credentials` annotation on a workload can also skip
-straight to the central config.
+So configure `registry` or `registries` for the hosts you own, and leave both
+empty where every workload already carries its own. Per workload, the
+`keelson.pro/credentials` annotation changes the order: `central` for central
+only, `respect-pod-spec` for the workload's own only.
 
 To fill the central config with a single registry, matching the Kaptain install:
 
@@ -143,8 +145,8 @@ registries: |
 ```
 
 Replace that block to configure several registries. The token goes with it, so
-`registry` is then unused. Set `auth-mode` to `secret`, `aws-irsa`, `azure-wi`,
-or `gcp-wi`.
+`registry` is then unused. Set `auth-mode` to `secret`, `aws`, `azure` or `gcp`.
+The older `aws-irsa`, `azure-wi` and `gcp-wi` spellings are still accepted.
 
 For `secret`, Keelson reads a dockerconfigjson Secret named after the host, with
 any port's colon turned into a hyphen since a colon cannot appear in a
@@ -173,9 +175,9 @@ registries: |
     auth-mode: secret
     namespace: platform-secrets
   123456789012.dkr.ecr.eu-west-1.amazonaws.com:
-    auth-mode: aws-irsa
+    auth-mode: aws
   europe-west1-docker.pkg.dev:
-    auth-mode: gcp-wi
+    auth-mode: gcp
 ```
 
 `registry-hosts.yaml` is the same thing with the key and its indentation gone:
@@ -185,9 +187,9 @@ quay.io:
   auth-mode: secret
   namespace: platform-secrets
 123456789012.dkr.ecr.eu-west-1.amazonaws.com:
-  auth-mode: aws-irsa
+  auth-mode: aws
 europe-west1-docker.pkg.dev:
-  auth-mode: gcp-wi
+  auth-mode: gcp
 ```
 
 Where no file is possible, `--set-json 'registries="quay.io:\n  auth-mode: secret\n"'`
@@ -221,6 +223,8 @@ does the same with the newlines escaped by hand.
 | `affinity`                   | Standard scheduling control.                                    |
 | `priorityClassName`          | Standard scheduling control.                                    |
 | `keelson.*`                  | Runtime tunables from the pinned source defaults.               |
+| `keelson.awsEcrCacheDir`     | Passed to `docker-credential-ecr-login`, not read by Keelson.   |
+| `keelson.awsEcrDisableCache` | The same, and empty is the answer you want. See `values.yaml`.  |
 
 Cloud platforms that bind identity to the ServiceAccount need metadata on it:
 `eks.amazonaws.com/role-arn` for EKS IRSA, `iam.gke.io/gcp-service-account` for
