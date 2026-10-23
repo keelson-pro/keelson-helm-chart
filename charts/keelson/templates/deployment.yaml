@@ -9,7 +9,7 @@ metadata:
   labels:
     {{- include "keelson.labels" . | nindent 4 }}
     kaptain.org/project-name: keelson
-    kaptain.org/version: "1.25"
+    kaptain.org/version: "1.27"
     kaptain.org/owner: keelson-pro
   annotations:
     kaptain.org/source-repository: keelson-pro/keelson
@@ -31,7 +31,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
         kaptain.org/project-name: keelson
-        kaptain.org/version: "1.25"
+        kaptain.org/version: "1.27"
         kaptain.org/owner: keelson-pro
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
@@ -115,8 +115,12 @@ spec:
               value: "{{ .Values.keelson.watcherReconnectReset }}"
             - name: KEELSON_STATE_CONFIGMAP
               value: "{{ .Values.keelson.stateConfigMap }}"
-            - name: KEELSON_FIELD_MANAGER_STRATEGY_OWNED
-              value: "{{ .Values.keelson.fieldManagerStrategyOwned }}"
+            - name: KEELSON_FIELD_MANAGER_STRATEGY_APPLY_OWNED
+              value: "{{ .Values.keelson.fieldManagerStrategyApplyOwned }}"
+            - name: KEELSON_FIELD_MANAGER_STRATEGY_UPDATE_OWNED
+              value: "{{ .Values.keelson.fieldManagerStrategyUpdateOwned }}"
+            - name: KEELSON_FIELD_MANAGER_STRATEGY_MIMIC_ANNOTATION_FALLBACK_ALLOWED
+              value: "{{ .Values.keelson.fieldManagerStrategyMimicAnnotationFallbackAllowed }}"
             - name: KEELSON_FIELD_MANAGER_STRATEGY_UNOWNED
               value: "{{ .Values.keelson.fieldManagerStrategyUnowned }}"
             - name: KEELSON_LOG_DEBUG_REPEAT_INTERVAL
@@ -168,6 +172,8 @@ spec:
               mountPath: /keelson/work
             - name: home
               mountPath: /home/keelson
+            - name: tmp
+              mountPath: /tmp
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -191,4 +197,6 @@ spec:
         - name: work
           emptyDir: {}
         - name: home
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}

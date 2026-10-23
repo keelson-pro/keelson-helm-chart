@@ -50,8 +50,8 @@ kubectl version -o yaml | grep -A2 serverVersion
 **Take the highest Y your cluster allows, one above its current minor, and the
 highest Z.** For a chart whose `appVersion` is `@KEELSON_PIN@`:
 
-| Cluster | Suitable package versions                   | Recommended   |
-|---------|---------------------------------------------|---------------|
+| Cluster | Suitable package versions                                              | Recommended            |
+|---------|------------------------------------------------------------------------|------------------------|
 | `1.35`  | `@KEELSON_PIN@.1.34.Z`, `@KEELSON_PIN@.1.35.Z`, `@KEELSON_PIN@.1.36.Z` | `@KEELSON_PIN@.1.36.Z` |
 | `1.36`  | `@KEELSON_PIN@.1.35.Z`, `@KEELSON_PIN@.1.36.Z`, `@KEELSON_PIN@.1.37.Z` | `@KEELSON_PIN@.1.37.Z` |
 
@@ -270,9 +270,12 @@ themselves, which grants the same access from their side.
 
 ## Minimum Argo Rollouts CRD Version
 
-Keelson only works correctly with Argo Rollouts 1.9.0 or newer. Earlier
-versions of the CRD are flawed and will result in corrupted resources if used
-with Keelson.
+Use Argo Rollouts 1.9.0 or newer. Older CRDs record a Rollout's `containers` as
+one atomic value. Keelson's default `mimic` strategy still works there, but
+`claim-apply` refuses, because sending one image would replace the whole list;
+`claim-patch` works. After an upgrade to 1.9, a Rollout whose owner recorded the
+list whole under the old CRD is refused by `mimic` until the owner syncs it
+again.
 
 
 ## Security through least privilege
@@ -281,18 +284,18 @@ Keelson ships RBAC for its whole feature set, and its README lists
 [what can be removed and when](https://github.com/keelson-pro/keelson/blob/main/README.md#security-through-least-privilege).
 This chart makes those reductions for you, from values you are setting anyway:
 
-| Grant                                          | Held while                                             |
-|------------------------------------------------|--------------------------------------------------------|
-| `deployments` get, list, watch, patch, update  | `keelson.watchedKinds` names `Deployment`              |
-| `statefulsets` get, list, watch, patch, update | it names `StatefulSet`                                 |
-| `daemonsets` get, list, watch, patch, update   | it names `DaemonSet`                                   |
-| `cronjobs` get, list, watch, patch, update     | it names `CronJob`                                     |
-| `jobs` create                                  | `rbac.allowJobCreate`, and `CronJob` watched           |
-| `secrets` get                                  | `rbac.allowSecretRead`                                 |
-| `serviceaccounts` get                          | `keelson.respectServiceAccountPullSecrets` is true     |
-| `rollouts` get, list, watch, patch, update     | `keelson.watchedKinds` names `Rollout`                 |
-| `configmaps` get, list, create, patch, update  | always, in the install namespace only                  |
-| `namespaces` get                               | `keelson.namespaces` is not empty                      |
+| Grant                                          | Held while                                         |
+|------------------------------------------------|----------------------------------------------------|
+| `deployments` get, list, watch, patch, update  | `keelson.watchedKinds` names `Deployment`          |
+| `statefulsets` get, list, watch, patch, update | it names `StatefulSet`                             |
+| `daemonsets` get, list, watch, patch, update   | it names `DaemonSet`                               |
+| `cronjobs` get, list, watch, patch, update     | it names `CronJob`                                 |
+| `jobs` create                                  | `rbac.allowJobCreate`, and `CronJob` watched       |
+| `secrets` get                                  | `rbac.allowSecretRead`                             |
+| `serviceaccounts` get                          | `keelson.respectServiceAccountPullSecrets` is true |
+| `rollouts` get, list, watch, patch, update     | `keelson.watchedKinds` names `Rollout`             |
+| `configmaps` get, list, create, patch, update  | always, in the install namespace only              |
+| `namespaces` get                               | `keelson.namespaces` is not empty                  |
 
 The first two reductions on that list need nothing from you: `keelson.namespaces`
 picks the cluster-scoped set or the per-namespace set, never both. Leaving it

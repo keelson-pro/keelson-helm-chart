@@ -28,7 +28,7 @@ version. Package versions are self-explanatory once you know the pattern:
 # Format
 1.X.1.Y.Z
 # Example
-1.25.1.36.1
+1.27.1.36.1
 ```
 
 Where:
@@ -48,12 +48,12 @@ kubectl version -o yaml | grep -A2 serverVersion
 ```
 
 **Take the highest Y your cluster allows, one above its current minor, and the
-highest Z.** For a chart whose `appVersion` is `1.25`:
+highest Z.** For a chart whose `appVersion` is `1.27`:
 
 | Cluster | Suitable package versions                   | Recommended   |
 |---------|---------------------------------------------|---------------|
-| `1.35`  | `1.25.1.34.Z`, `1.25.1.35.Z`, `1.25.1.36.Z` | `1.25.1.36.Z` |
-| `1.36`  | `1.25.1.35.Z`, `1.25.1.36.Z`, `1.25.1.37.Z` | `1.25.1.37.Z` |
+| `1.35`  | `1.27.1.34.Z`, `1.27.1.35.Z`, `1.27.1.36.Z` | `1.27.1.36.Z` |
+| `1.36`  | `1.27.1.35.Z`, `1.27.1.36.Z`, `1.27.1.37.Z` | `1.27.1.37.Z` |
 
 Every version in the middle column suits the cluster today, but they age
 differently. Pinning one above your cluster leaves two cluster upgrades before
@@ -270,9 +270,12 @@ themselves, which grants the same access from their side.
 
 ## Minimum Argo Rollouts CRD Version
 
-Keelson only works correctly with Argo Rollouts 1.9.0 or newer. Earlier
-versions of the CRD are flawed and will result in corrupted resources if used
-with Keelson.
+Use Argo Rollouts 1.9.0 or newer. Older CRDs record a Rollout's `containers` as
+one atomic value. Keelson's default `mimic` strategy still works there, but
+`claim-apply` refuses, because sending one image would replace the whole list;
+`claim-patch` works. After an upgrade to 1.9, a Rollout whose owner recorded the
+list whole under the old CRD is refused by `mimic` until the owner syncs it
+again.
 
 
 ## Security through least privilege
